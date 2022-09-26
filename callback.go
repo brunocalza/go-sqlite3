@@ -71,9 +71,9 @@ func rollbackHookTrampoline(handle unsafe.Pointer) {
 }
 
 //export updateHookTrampoline
-func updateHookTrampoline(handle unsafe.Pointer, op int, db *C.char, table *C.char, rowid int64) {
-	callback := lookupHandle(handle).(func(int, string, string, int64))
-	callback(op, C.GoString(db), C.GoString(table), rowid)
+func updateHookTrampoline(handle unsafe.Pointer, op int, db *C.char, table *C.char, rowid int64, data *C.char, size int) {
+	callback := lookupHandle(handle).(func(int, string, string, int64, []byte))
+	callback(op, C.GoString(db), C.GoString(table), rowid, C.GoBytes(unsafe.Pointer(data), C.int(size)))
 }
 
 //export authorizerTrampoline
@@ -103,8 +103,10 @@ type handleVal struct {
 	val interface{}
 }
 
-var handleLock sync.Mutex
-var handleVals = make(map[unsafe.Pointer]handleVal)
+var (
+	handleLock sync.Mutex
+	handleVals = make(map[unsafe.Pointer]handleVal)
+)
 
 func newHandle(db *SQLiteConn, v interface{}) unsafe.Pointer {
 	handleLock.Lock()
@@ -360,11 +362,11 @@ func callbackRetGeneric(ctx *C.sqlite3_context, v reflect.Value) error {
 	}
 
 	cb, err := callbackRet(v.Elem().Type())
-        if err != nil {
-                return err
-        }
+	if err != nil {
+		return err
+	}
 
-        return cb(ctx, v.Elem())
+	return cb(ctx, v.Elem())
 }
 
 func callbackRet(typ reflect.Type) (callbackRetConverter, error) {

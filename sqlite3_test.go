@@ -425,7 +425,6 @@ func TestUpsert(t *testing.T) {
 	if resultCounter != 10 {
 		t.Errorf("Expected %d for fetched result, but %d:", 10, resultCounter)
 	}
-
 }
 
 func TestUpdate(t *testing.T) {
@@ -596,7 +595,6 @@ func TestBooleanRoundtrip(t *testing.T) {
 
 		if id == 1 && !value {
 			t.Error("Value for id 1 should be true, not false")
-
 		} else if id == 2 && value {
 			t.Error("Value for id 2 should be false, not true")
 		}
@@ -1128,7 +1126,7 @@ func TestQueryer(t *testing.T) {
 		if err != nil {
 			t.Error("Failed to db.Query:", err)
 		}
-		if id != n + 1 {
+		if id != n+1 {
 			t.Error("Failed to db.Query: not matched results")
 		}
 		n = n + 1
@@ -1497,28 +1495,28 @@ func TestAggregatorRegistration(t *testing.T) {
 }
 
 type mode struct {
-        counts   map[interface{}]int
-        top      interface{}
-        topCount int
+	counts   map[interface{}]int
+	top      interface{}
+	topCount int
 }
 
 func newMode() *mode {
-        return &mode{
-                counts: map[interface{}]int{},
-        }
+	return &mode{
+		counts: map[interface{}]int{},
+	}
 }
 
 func (m *mode) Step(x interface{}) {
-        m.counts[x]++
-        c := m.counts[x]
-        if c > m.topCount {
-                m.top = x
-                m.topCount = c
-        }
+	m.counts[x]++
+	c := m.counts[x]
+	if c > m.topCount {
+		m.top = x
+		m.topCount = c
+	}
 }
 
 func (m *mode) Done() interface{} {
-        return m.top
+	return m.top
 }
 
 func TestAggregatorRegistration_GenericReturn(t *testing.T) {
@@ -1534,19 +1532,19 @@ func TestAggregatorRegistration_GenericReturn(t *testing.T) {
 	defer db.Close()
 
 	_, err = db.Exec("create table foo (department integer, profits integer)")
-        if err != nil {
-                t.Fatal("Failed to create table:", err)
-        }
-        _, err = db.Exec("insert into foo values (1, 10), (1, 20), (1, 45), (2, 42), (2, 115), (2, 20)")
-        if err != nil {
-                t.Fatal("Failed to insert records:", err)
-        }
+	if err != nil {
+		t.Fatal("Failed to create table:", err)
+	}
+	_, err = db.Exec("insert into foo values (1, 10), (1, 20), (1, 45), (2, 42), (2, 115), (2, 20)")
+	if err != nil {
+		t.Fatal("Failed to insert records:", err)
+	}
 
 	var mode int
-        err = db.QueryRow("select mode(profits) from foo").Scan(&mode)
-        if err != nil {
-                t.Fatal("MODE query error:", err)
-        }
+	err = db.QueryRow("select mode(profits) from foo").Scan(&mode)
+	if err != nil {
+		t.Fatal("MODE query error:", err)
+	}
 
 	if mode != 20 {
 		t.Fatal("Got incorrect mode. Wanted 20, got: ", mode)
@@ -1675,7 +1673,6 @@ func TestCollationRegistration(t *testing.T) {
 }
 
 func TestDeclTypes(t *testing.T) {
-
 	d := SQLiteDriver{}
 
 	conn, err := d.Open(":memory:")
@@ -1727,7 +1724,7 @@ func TestPinger(t *testing.T) {
 
 func TestUpdateAndTransactionHooks(t *testing.T) {
 	var events []string
-	var commitHookReturn = 0
+	commitHookReturn := 0
 
 	sql.Register("sqlite3_UpdateHook", &SQLiteDriver{
 		ConnectHook: func(conn *SQLiteConn) error {
@@ -1738,7 +1735,7 @@ func TestUpdateAndTransactionHooks(t *testing.T) {
 			conn.RegisterRollbackHook(func() {
 				events = append(events, "rollback")
 			})
-			conn.RegisterUpdateHook(func(op int, db string, table string, rowid int64) {
+			conn.RegisterUpdateHook(func(op int, db string, table string, rowid int64, data []byte) {
 				events = append(events, fmt.Sprintf("update(op=%v db=%v table=%v rowid=%v)", op, db, table, rowid))
 			})
 			return nil
@@ -1769,7 +1766,7 @@ func TestUpdateAndTransactionHooks(t *testing.T) {
 		t.Error("Commit hook failed to rollback transaction")
 	}
 
-	var expected = []string{
+	expected := []string{
 		"commit",
 		fmt.Sprintf("update(op=%v db=main table=foo rowid=9)", SQLITE_INSERT),
 		"commit",
@@ -1787,7 +1784,7 @@ func TestUpdateAndTransactionHooks(t *testing.T) {
 }
 
 func TestAuthorizer(t *testing.T) {
-	var authorizerReturn = 0
+	authorizerReturn := 0
 
 	sql.Register("sqlite3_Authorizer", &SQLiteDriver{
 		ConnectHook: func(conn *SQLiteConn) error {
@@ -2230,7 +2227,7 @@ func testResult(t *testing.T) {
 // testBlobs is test for blobs
 func testBlobs(t *testing.T) {
 	db.tearDown()
-	var blob = []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+	blob := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
 	db.mustExec("create table foo (id integer primary key, bar " + db.blobType(16) + ")")
 	db.mustExec(db.q("insert into foo (id, bar) values(?,?)"), 0, blob)
 
@@ -2257,9 +2254,9 @@ func testBlobs(t *testing.T) {
 func testMultiBlobs(t *testing.T) {
 	db.tearDown()
 	db.mustExec("create table foo (id integer primary key, bar " + db.blobType(16) + ")")
-	var blob0 = []byte{0, 1, 2, 3, 4, 5, 6, 7}
+	blob0 := []byte{0, 1, 2, 3, 4, 5, 6, 7}
 	db.mustExec(db.q("insert into foo (id, bar) values(?,?)"), 0, blob0)
-	var blob1 = []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+	blob1 := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
 	db.mustExec(db.q("insert into foo (id, bar) values(?,?)"), 1, blob1)
 
 	r, err := db.Query(db.q("select bar from foo order by id"))
